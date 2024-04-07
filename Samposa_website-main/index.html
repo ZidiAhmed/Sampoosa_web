@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sampoosa</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* Custom styles */
+        .icon {
+            width: 40px; /* Set the width of the icon */
+            height: auto; /* Maintain aspect ratio */
+        }
+
+        /* Set text color to white */
+        a {
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <header>version: 1</header>
+    <div class="container">
+        <div class="special-card">
+            <img src="public/images/Headder_image.png" alt="Sampoosa Logo">
+            <a href="https://solscan.io/token/Fb7aVS1a33vEqGHG2nSZQErxvxyojxoBJmSmfXGbgXFA" target="_blank">
+                <h1>Welcome to Sampoosa!</h1>
+                <p>Join us for an exciting journey in the world of cryptocurrency.</p>
+            </a>
+        </div>
+        <div class="card">
+            <header>
+                <img src="public/images/sampoosa_logo.png" alt="Sampoosa Logo">
+                <h1>Welcome to Sampoosa!</h1>
+                <p><center>Join us for an exciting journey in the world of cryptocurrency.</center></p>
+            </header>
+        </div>
+        <div class="card">
+            <section>
+                <h2>Explore Sampoosa</h2>
+                <p><center>This token brings a playful twist to the digital asset arena.</center></p>
+            </section>
+        </div>
+        <div class="card">
+            <section>
+                <h2>Contact Us</h2>
+                <p><center><a href="https://www.instagram.com/Sampoosa_SMP" target="_blank"><img class="icon" src="public/images/instagram_icon.png" alt="Instagram"> Sampoosa_SMP</a></center></p>
+                <p><center><a href="https://twitter.com/SampoosaSPM" target="_blank"><img class="icon" src="public/images/twitter_icon.png" alt="Twitter"> @SampoosaSPM</a></center></p>
+            </section>
+        </div>
+    
+    <footer>
+        <p>Connect with us on <a href="https://github.com/AhlamBest">GitHub</a>.</p>
+    </footer>
+    </div>
+    
+    <div>
+        <select id="cryptoSelect">
+            <option value="bitcoin">Bitcoin</option>
+            <option value="litecoin">Litecoin</option>
+            <option value="ethereum">Ethereum</option>
+            <option value="dogecoin">Dogecoin</option>
+            <option value="cardano">Cardano</option>
+            <option value="tether">Tether</option>
+        </select>
+    </div>
+    <canvas id="myChart" width="400" height="400"></canvas>
+    <div id="cryptoDetails">
+        <h2>Crypto Details</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Price (USD)</th>
+                    <th>Change (10m)</th>
+                    <th>Change (1h)</th>
+                    <th>Change (24h)</th>
+                    <th>Recommendation</th>
+                    <th>Trend</th>
+                </tr>
+            </thead>
+            <tbody id="cryptoDetailsBody">
+                <!-- Crypto details will be added dynamically here -->
+            </tbody>
+        </table>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        var ctx = document.getElementById("myChart").getContext("2d");
+        var myChart = null;
+
+        function createChart(data) {
+            if (myChart !== null) {
+                myChart.destroy();
+            }
+
+            myChart = new Chart(ctx, {
+                type: "line",
+                data: {
+                    labels: ["00:00 AM", "01:00 AM", "02:00 AM", "03:00 AM", "04:00 AM", "05:00 AM", "06:00 AM", "07:00 AM", "01:00 AM", "09:00 AM"],
+                    datasets: [
+                        {
+                            label: "Price",
+                            data: data,
+                            backgroundColor: ["rgba(113, 88, 203, .15)"],
+                            borderColor: ["rgba(113, 88, 203, 1)"],
+                            borderWidth: 1,
+                            fill: "start"
+                        }
+                    ]
+                },
+                options: {
+                    elements: {
+                        line: {
+                            tension: 0.4 // Adjust tension for smoother curve
+                        }
+                    }
+                }
+            });
+        }
+
+        function fetchAndDisplayData(crypto) {
+            fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${crypto}&vs_currencies=usd&include_24hr_change=true`)
+            .then(res => res.json())
+            .then(json => {
+                const coinInfo = json[crypto];
+                const price = coinInfo.usd;
+                const change10m = coinInfo.usd_10m_change.toFixed(5);
+                const change1h = coinInfo.usd_1h_change.toFixed(5);
+                const change24h = coinInfo.usd_24h_change.toFixed(5);
+                const recommendation = change24h < 0 ? 'Sell' : (change24h > 0 ? 'Buy' : 'Hold');
+                const trendColor = change24h < 0 ? 'red' : 'green';
+
+                // Update chart data
+                const newData = myChart.data.datasets[0].data.slice(1);
+                newData.push(Math.floor(Math.random() * 100));
+                myChart.data.datasets[0].data = newData;
+                myChart.update();
+
+                // Update crypto details
+                document.getElementById('cryptoDetailsBody').innerHTML = `
+                    <tr>
+                        <td>${crypto.charAt(0).toUpperCase() + crypto.slice(1)}</td>
+                        <td>$${price}</td>
+                        <td>${change10m}%</td>
+                        <td>${change1h}%</td>
+                        <td>${change24h}%</td>
+                        <td>${recommendation}</td>
+                        <td style="color: ${trendColor};">${change24h > 0 ? 'Up' : 'Down'}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        // Fetch data initially for the default selection (Bitcoin)
+        const defaultCrypto = document.getElementById('cryptoSelect').value;
+        createChart(Array.from({ length: 10 }, () => Math.floor(Math.random() * 100)));
+        setInterval(() => fetchAndDisplayData(defaultCrypto), 1000); // Update data every second
+
+        // Event listener for dropdown change
+        document.getElementById('cryptoSelect').addEventListener('change', function() {
+            const selectedCrypto = this.value;
+            fetchAndDisplayData(selectedCrypto);
+        });
+    </script>
+</body>
+</html>
